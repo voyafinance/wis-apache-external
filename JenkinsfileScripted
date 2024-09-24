@@ -1,0 +1,29 @@
+node{
+
+def mavenHome = tool name: 'Maven'
+
+stage('CheckoutCode')
+{
+git branch: 'cloud_unit', credentialsId: '960a1bf2-9705-4205-8804-a856f4ad3acd', url: 'https://github.com/voyafinance/wis-apache-external.git'
+}
+
+stage('Build')
+{
+sh "${mavenHome}/bin/mvn clean package"
+}
+
+/*stage('SonarQuveRepot'){
+sh "${mavenHome}/bin/mvn clean sonar:sonar"
+}*/
+
+stage('UploadArtifacts'){
+sh "${mavenHome}/bin/mvn clean deploy"
+}
+
+stage('Deploy'){
+sshagent(['3e7930c7-63f6-4994-a84a-aae18745aecf']) {
+   sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.0.183:/opt/apache-tomcat-9.0.95/webapps/"
+}
+}
+
+}//node closing
